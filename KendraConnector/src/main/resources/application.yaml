@@ -1,0 +1,26 @@
+aws:
+  credentials:
+    accessKey: <<<AWS ACCESS KEY>>>
+    secretKey: <<<AWS SECRET ACCESS KEY>>>
+    region: ap-south-1
+  kendra:
+    index:
+      id: <<< KENDRA INDEX ID >>>
+  iamRole:
+    arn: <<<API ROLE>>>
+  githubProfile:
+    hostUrl: https://api.github.com
+    organizationName: PeopleTechGroup
+    credentials:
+      accessKey: <<< AWS ACCESS KEY >>>
+      secretKey: <<< AWS SECRET ACCESS KEY >>>
+      region: us-west-2
+    kendra:
+      index:
+        id: <<< AWS KENDRA ID >>>
+    iamRole:
+      arn: <<< IAM ROLE ARN >>>
+    secret:
+      arn: <<< AWS KENDRA DATASOURCE SECRET ARN >>>
+
+
