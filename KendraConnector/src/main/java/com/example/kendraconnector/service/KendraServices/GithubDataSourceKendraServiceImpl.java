@@ -82,7 +82,8 @@ public class GithubDataSourceKendraServiceImpl implements GithubDataSourceKendra
             if (status == IndexStatus.CREATING || status == IndexStatus.UPDATING || status == IndexStatus.DELETING) {
                 do {
                     TimeUnit.SECONDS.sleep(60);
-                    status = describeIndexResponse.status();
+                    status = kendraClient.describeIndex(describeIndexRequest).status();
+//                    status = describeIndexResponse.status();
                 } while (status == IndexStatus.CREATING);
             }
 
