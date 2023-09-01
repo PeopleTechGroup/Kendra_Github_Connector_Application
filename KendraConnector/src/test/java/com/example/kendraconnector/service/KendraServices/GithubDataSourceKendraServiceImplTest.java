@@ -17,6 +17,8 @@ import software.amazon.awssdk.services.kendra.model.GitHubConfiguration;
 import software.amazon.awssdk.services.kendra.model.IndexStatus;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -67,13 +69,40 @@ class GithubDataSourceKendraServiceImplTest {
 
     //test case for checking Kendra Index Status
     @Test
-    void when_checkKendraIndexStatusIsCalled_then_getIndexStatusAsActive(){
+    void when_checkKendraIndexStatusIsCalled_then_getIndexStatusAsActive() {
         String indexId = "indexId";
         DescribeIndexResponse describeIndexResponse = DescribeIndexResponse.builder().status(IndexStatus.ACTIVE).build();
         when(mockKendraClient.describeIndex(any(DescribeIndexRequest.class)))
                 .thenReturn(describeIndexResponse);
         IndexStatus indexStatus = injectedObject.checkKendraIndexStatus(indexId);
         assertEquals(IndexStatus.ACTIVE, indexStatus);
+    }
+
+    //Test cases for checking if kendra index exists
+    @Test
+    void when_indexIsActive_then_checkKendraIndexExistReturnsTrue() {
+        String indexId = "indexId";
+        DescribeIndexResponse describeIndexResponse = DescribeIndexResponse.builder().status(IndexStatus.ACTIVE).build();
+        when(mockKendraClient.describeIndex(any(DescribeIndexRequest.class))).thenReturn(describeIndexResponse);
+        boolean indexExists = injectedObject.checkKendraIndexExists(indexId);
+        assertTrue(indexExists);
+    }
+    @Test
+    void when_indexStatusIsFailed_then_checkKendraIndexExistReturnsFalse() {
+        String indexId = "indexId";
+        DescribeIndexResponse describeIndexResponse = DescribeIndexResponse.builder().status(IndexStatus.FAILED).build();
+        when(mockKendraClient.describeIndex(any(DescribeIndexRequest.class))).thenReturn(describeIndexResponse);
+        boolean indexExists = injectedObject.checkKendraIndexExists(indexId);
+        assertFalse(indexExists);
+    }
+    @Test
+    void when_indexStatusIsFirstCreatingThenActive_then_checkKendraIndexExistReturnsTrue() {
+        String indexId = "indexId";
+        DescribeIndexResponse describeIndexResponse1 = DescribeIndexResponse.builder().status(IndexStatus.CREATING).build();
+        DescribeIndexResponse describeIndexResponse2 = DescribeIndexResponse.builder().status(IndexStatus.ACTIVE).build();
+        when(mockKendraClient.describeIndex(any(DescribeIndexRequest.class))).thenReturn(describeIndexResponse1).thenReturn(describeIndexResponse2);
+        boolean indexExists = injectedObject.checkKendraIndexExists(indexId);
+        assertTrue(indexExists);
     }
 
     //Test case for creating GitHub data source associated with Kendra Index
