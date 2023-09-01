@@ -2,6 +2,7 @@ package com.example.kendraconnector.service.KendraServices;
 
 import com.example.kendraconnector.dto.ResultItemDto;
 import com.example.kendraconnector.exceptions.BasicKendraException;
+import com.example.kendraconnector.exceptions.DataSourceCreationException;
 import com.example.kendraconnector.exceptions.KendraIndexCreationException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -80,18 +81,6 @@ class GithubDataSourceKendraServiceImplTest {
         //assertEquals assertion ensures that the expected and actual values match.
         assertEquals(indexId, resultItemDto.getId());
     }
-    //Test for exception handling in createKendraIndex()
-    @Test
-    void when_createKendraIndexThrowsException_then_itIsHandledProperly() {
-        String indexName = "indexName";
-        String indexDescription = "indexDescription";
-        when(mockKendraClient.createIndex(any(CreateIndexRequest.class)))
-                .thenThrow(new RuntimeException("Simulated Exception"));
-
-        assertThrows(KendraIndexCreationException.class, () -> {
-            injectedObject.createKendraIndex(indexName, indexDescription);
-        });
-    }
 
     //Test case for checking index description when createKendraIndex is called
     @Test
@@ -104,7 +93,18 @@ class GithubDataSourceKendraServiceImplTest {
         assertEquals(indexDescription, resultItemDto.getDescription());
     }
 
+    //Test for exception handling in createKendraIndex()
+    @Test
+    void when_createKendraIndexThrowsException_then_itIsHandledProperly() {
+        String indexName = "indexName";
+        String indexDescription = "indexDescription";
+        when(mockKendraClient.createIndex(any(CreateIndexRequest.class)))
+                .thenThrow(new RuntimeException("Simulated Exception"));
 
+        assertThrows(KendraIndexCreationException.class, () -> {
+            injectedObject.createKendraIndex(indexName, indexDescription);
+        });
+    }
 
     //test case for checking Kendra Index Status
     @Test
@@ -174,6 +174,16 @@ class GithubDataSourceKendraServiceImplTest {
         String result = injectedObject.createKendraGithubDataSource(indexId);
         assertEquals(indexId, result);
     }
+    //Test for exception handling in createKendraGithubDataSource()
+    @Test
+    void when_createKendraGithubDataSourceThrowsException_then_itIsHandledProperly() {
+        String indexId = "indexId";
+        when(mockKendraClient.createDataSource(any(CreateDataSourceRequest.class)))
+                .thenThrow(new RuntimeException("Simulated Exception"));
+        assertThrows(DataSourceCreationException.class, () ->{
+            injectedObject.createKendraGithubDataSource(indexId);
+        });
+    }
 
     //Test cases for checking if Kendra Data Source Exists
     @Test
@@ -207,6 +217,17 @@ class GithubDataSourceKendraServiceImplTest {
         assertTrue(dataSourceExists);
     }
 
+    //Test for exception handling in checkKendraDataSourceExists()
+    @Test
+    void when_checkKendraDataSourceExistsThrowsException_then_itIsHandledProperly() {
+        String indexId = "indexId";
+        String dataSourceId = "dataSourceId";
+        when(mockKendraClient.describeDataSource(any(DescribeDataSourceRequest.class)))
+                .thenThrow(new RuntimeException("Simulated Exception"));
+        assertThrows(DataSourceCreationException.class, () ->{
+            injectedObject.checkKendraDataSourceExists(indexId, dataSourceId);
+        });
+    }
     //test case for checking query results
     @Test
     void when_getQueryResultIsCalled_then_getExpectedListOfQueryResultItems() {
