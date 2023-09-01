@@ -4,6 +4,7 @@ import com.example.kendraconnector.dto.ResultItemDto;
 import com.example.kendraconnector.exceptions.BasicKendraException;
 import com.example.kendraconnector.exceptions.DataSourceCreationException;
 import com.example.kendraconnector.exceptions.KendraIndexCreationException;
+import com.example.kendraconnector.exceptions.KendraQueryException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
@@ -228,6 +229,7 @@ class GithubDataSourceKendraServiceImplTest {
             injectedObject.checkKendraDataSourceExists(indexId, dataSourceId);
         });
     }
+
     //test case for checking query results
     @Test
     void when_getQueryResultIsCalled_then_getExpectedListOfQueryResultItems() {
@@ -276,6 +278,18 @@ class GithubDataSourceKendraServiceImplTest {
                 .toList();
 
         assertEquals(queryResultItemsLocalExpected, queryResultItemsLocal);
+    }
+
+    //Test for exception handling in checkKendraDataSourceExists()
+    @Test
+    void when_getQueryResultThrowsException_then_itIsHandledProperly() {
+        String indexId = "indexId";
+        String dataSourceId = "dataSourceId";
+        when(mockKendraClient.query(any(QueryRequest.class)))
+                .thenThrow(new RuntimeException("Simulated Exception"));
+        assertThrows(KendraQueryException.class, () ->{
+            injectedObject.getQueryResult(indexId, dataSourceId);
+        });
     }
 
     //Test cases for getting all data sources in an index
