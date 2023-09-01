@@ -1,6 +1,8 @@
 package com.example.kendraconnector.service.KendraServices;
 
 import com.example.kendraconnector.dto.ResultItemDto;
+import com.example.kendraconnector.exceptions.BasicKendraException;
+import com.example.kendraconnector.exceptions.KendraIndexCreationException;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
@@ -40,6 +42,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -77,6 +80,18 @@ class GithubDataSourceKendraServiceImplTest {
         //assertEquals assertion ensures that the expected and actual values match.
         assertEquals(indexId, resultItemDto.getId());
     }
+    //Test for exception handling in createKendraIndex()
+    @Test
+    void when_createKendraIndexThrowsException_then_itIsHandledProperly() {
+        String indexName = "indexName";
+        String indexDescription = "indexDescription";
+        when(mockKendraClient.createIndex(any(CreateIndexRequest.class)))
+                .thenThrow(new RuntimeException("Simulated Exception"));
+
+        assertThrows(KendraIndexCreationException.class, () -> {
+            injectedObject.createKendraIndex(indexName, indexDescription);
+        });
+    }
 
     //Test case for checking index description when createKendraIndex is called
     @Test
@@ -89,6 +104,8 @@ class GithubDataSourceKendraServiceImplTest {
         assertEquals(indexDescription, resultItemDto.getDescription());
     }
 
+
+
     //test case for checking Kendra Index Status
     @Test
     void when_checkKendraIndexStatusIsCalled_then_getIndexStatusAsActive() {
@@ -98,6 +115,17 @@ class GithubDataSourceKendraServiceImplTest {
                 .thenReturn(describeIndexResponse);
         IndexStatus indexStatus = injectedObject.checkKendraIndexStatus(indexId);
         assertEquals(IndexStatus.ACTIVE, indexStatus);
+    }
+
+    //Test for exception handling in checkKendraIndexStatus()
+    @Test
+    void when_checkKendraIndexStatusThrowsException_then_itIsHandledProperly() {
+        String indexId = "indexId";
+        when(mockKendraClient.describeIndex(any(DescribeIndexRequest.class)))
+                .thenThrow(new RuntimeException("Simulated Exception"));
+        assertThrows(BasicKendraException.class, () ->{
+            injectedObject.checkKendraIndexStatus(indexId);
+        });
     }
 
     //Test cases for checking if kendra index exists
@@ -125,6 +153,16 @@ class GithubDataSourceKendraServiceImplTest {
         when(mockKendraClient.describeIndex(any(DescribeIndexRequest.class))).thenReturn(describeIndexResponse1).thenReturn(describeIndexResponse2);
         boolean indexExists = injectedObject.checkKendraIndexExists(indexId);
         assertTrue(indexExists);
+    }
+    //Test for exception handling in checkKendraIndexExists()
+    @Test
+    void when_checkKendraIndexExistsThrowsException_then_itIsHandledProperly() {
+        String indexId = "indexId";
+        when(mockKendraClient.describeIndex(any(DescribeIndexRequest.class)))
+                .thenThrow(new RuntimeException("Simulated Exception"));
+        assertThrows(KendraIndexCreationException.class, () ->{
+            injectedObject.checkKendraIndexExists(indexId);
+        });
     }
 
     //Test case for creating GitHub data source associated with Kendra Index
