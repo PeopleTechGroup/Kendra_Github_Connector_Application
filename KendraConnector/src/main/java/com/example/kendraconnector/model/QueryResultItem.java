@@ -1,10 +1,12 @@
 package com.example.kendraconnector.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@EqualsAndHashCode
 public class QueryResultItem {
     private String id;
     private String type;
@@ -16,5 +18,4 @@ public class QueryResultItem {
     private String documentURI;
     private String documentAttributes;
     private String scoreAttributes;
-
 }

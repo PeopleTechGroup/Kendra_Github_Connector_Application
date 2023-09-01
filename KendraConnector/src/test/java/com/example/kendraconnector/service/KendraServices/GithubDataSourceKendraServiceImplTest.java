@@ -1,6 +1,7 @@
 package com.example.kendraconnector.service.KendraServices;
 
 import com.example.kendraconnector.dto.ResultItemDto;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -11,13 +12,25 @@ import software.amazon.awssdk.services.kendra.model.CreateDataSourceRequest;
 import software.amazon.awssdk.services.kendra.model.CreateDataSourceResponse;
 import software.amazon.awssdk.services.kendra.model.CreateIndexRequest;
 import software.amazon.awssdk.services.kendra.model.CreateIndexResponse;
+import software.amazon.awssdk.services.kendra.model.DataSourceStatus;
+import software.amazon.awssdk.services.kendra.model.DescribeDataSourceRequest;
+import software.amazon.awssdk.services.kendra.model.DescribeDataSourceResponse;
 import software.amazon.awssdk.services.kendra.model.DescribeIndexRequest;
 import software.amazon.awssdk.services.kendra.model.DescribeIndexResponse;
 import software.amazon.awssdk.services.kendra.model.GitHubConfiguration;
 import software.amazon.awssdk.services.kendra.model.IndexStatus;
+import software.amazon.awssdk.services.kendra.model.QueryRequest;
+import software.amazon.awssdk.services.kendra.model.QueryResponse;
+import software.amazon.awssdk.services.kendra.model.QueryResultItem;
+import software.amazon.awssdk.services.kendra.model.ScoreAttributes;
+import software.amazon.awssdk.services.kendra.model.TextWithHighlights;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -115,6 +128,87 @@ class GithubDataSourceKendraServiceImplTest {
         assertEquals(indexId, result);
     }
 
+    //Test cases for checking if Kendra Data Source Exists
+    @Test
+    void when_dataSourceStatusIsActive_then_checkKendraDataSourceExistsReturnsTrue() {
+        String indexId = "indexId";
+        String dataSourceId = "dataSourceId";
+        DescribeDataSourceResponse describeDataSourceResponse = DescribeDataSourceResponse.builder().status(DataSourceStatus.ACTIVE).build();
+        when(mockKendraClient.describeDataSource(any(DescribeDataSourceRequest.class))).thenReturn(describeDataSourceResponse);
+        boolean dataSourceExists = injectedObject.checkKendraDataSourceExists(indexId, dataSourceId);
+        assertTrue(dataSourceExists);
+    }
+
+    @Test
+    void when_dataSourceStatusIsFailed_then_checkKendraDataSourceExistsReturnsFalse() {
+        String indexId = "indexId";
+        String dataSourceId = "dataSourceId";
+        DescribeDataSourceResponse describeDataSourceResponse = DescribeDataSourceResponse.builder().status(DataSourceStatus.FAILED).build();
+        when(mockKendraClient.describeDataSource(any(DescribeDataSourceRequest.class))).thenReturn(describeDataSourceResponse);
+        boolean dataSourceExists = injectedObject.checkKendraDataSourceExists(indexId, dataSourceId);
+        assertFalse(dataSourceExists);
+    }
+
+    @Test
+    void when_dataSourceStatusIsFirstUpdatingThenActive_then_checkKendraDataSourceExistsReturnsTrue() {
+        String indexId = "indexId";
+        String dataSourceId = "dataSourceId";
+        DescribeDataSourceResponse describeDataSourceResponse1 = DescribeDataSourceResponse.builder().status(DataSourceStatus.UPDATING).build();
+        DescribeDataSourceResponse describeDataSourceResponse2 = DescribeDataSourceResponse.builder().status(DataSourceStatus.ACTIVE).build();
+        when(mockKendraClient.describeDataSource(any(DescribeDataSourceRequest.class))).thenReturn(describeDataSourceResponse1).thenReturn(describeDataSourceResponse2);
+        boolean dataSourceExists = injectedObject.checkKendraDataSourceExists(indexId, dataSourceId);
+        assertTrue(dataSourceExists);
+    }
+
+    //test case for checking query results
+    @Test
+    void when_getQueryResultIsCalled_then_getExpectedListOfQueryResultItems() {
+        String id = "id";
+        String type = "type";
+        String format = "format";
+        String documentTitleText = "documentTitle";
+        TextWithHighlights documentTitle = TextWithHighlights.builder().text(documentTitleText).build();
+        String documentExcerptText = "documentExcerpt";
+        TextWithHighlights documentExcerpt = TextWithHighlights.builder().text(documentExcerptText).build();
+        String documentId = "documentId";
+        String documentURI = "documentURI";
+        String scoreConfidence = "scoreConfidence";
+        ScoreAttributes scoreAttributes = ScoreAttributes.builder().scoreConfidence(scoreConfidence).build();
+        String query = "query";
+        String indexId = "indexId";
+        List<QueryResultItem> resultItems = new ArrayList<>();
+        QueryResultItem queryResultItem =  QueryResultItem.builder()
+                .id(id)
+                .type(type)
+                .format(format)
+                .documentTitle(documentTitle)
+                .documentExcerpt(documentExcerpt)
+                .documentId(documentId)
+                .documentURI(documentURI)
+                .scoreAttributes(scoreAttributes)
+                .build();
+        resultItems.add(queryResultItem);
+        QueryResponse queryResponse = QueryResponse.builder().resultItems(resultItems).build();
+        when(mockKendraClient.query(any(QueryRequest.class))).thenReturn(queryResponse);
+        List<com.example.kendraconnector.model.QueryResultItem> queryResultItemsLocal = injectedObject.getQueryResult(query, indexId);
+
+        List<com.example.kendraconnector.model.QueryResultItem> queryResultItemsLocalExpected = resultItems.stream()
+                .map(resultItem -> {
+                    com.example.kendraconnector.model.QueryResultItem model = new com.example.kendraconnector.model.QueryResultItem();
+                    model.setId(resultItem.id());
+                    model.setType(resultItem.typeAsString());
+                    model.setFormat(resultItem.formatAsString());
+                    model.setDocumentTitle(resultItem.documentTitle().text());
+                    model.setDocumentExcerpt(resultItem.documentExcerpt().text());
+                    model.setDocumentId(resultItem.documentId());
+                    model.setDocumentURI(resultItem.documentURI());
+                    model.setScoreAttributes(resultItem.scoreAttributes().scoreConfidenceAsString());
+                    return model;
+                })
+                .toList();
+
+        assertEquals(queryResultItemsLocalExpected, queryResultItemsLocal);
+    }
 
 
 }
