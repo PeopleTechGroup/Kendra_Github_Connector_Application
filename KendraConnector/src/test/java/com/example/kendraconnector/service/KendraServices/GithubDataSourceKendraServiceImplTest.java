@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.services.kendra.KendraClient;
 import software.amazon.awssdk.services.kendra.model.CreateDataSourceRequest;
 import software.amazon.awssdk.services.kendra.model.CreateDataSourceResponse;
@@ -35,6 +36,7 @@ import software.amazon.awssdk.services.kendra.model.ListIndicesResponse;
 import software.amazon.awssdk.services.kendra.model.QueryRequest;
 import software.amazon.awssdk.services.kendra.model.QueryResponse;
 import software.amazon.awssdk.services.kendra.model.QueryResultItem;
+import software.amazon.awssdk.services.kendra.model.SaaSConfiguration;
 import software.amazon.awssdk.services.kendra.model.ScoreAttributes;
 import software.amazon.awssdk.services.kendra.model.TextWithHighlights;
 
@@ -309,6 +311,18 @@ class GithubDataSourceKendraServiceImplTest {
         assertEquals(allDataSourcesExpected, allDataSources);
     }
 
+    //Test for exception handling in getAllDataSources()
+    @Test
+    void when_getAllDataSourcesException_then_itIsHandledProperly() {
+        String indexId = "indexId";
+//        String dataSourceId = "dataSourceId";
+        when(mockKendraClient.listDataSources(any(ListDataSourcesRequest.class)))
+                .thenThrow(new RuntimeException("Simulated Exception"));
+        assertThrows(BasicKendraException.class, () ->{
+            injectedObject.getAllDataSources(indexId);
+        });
+    }
+
     //Test cases for getting all Kendra Indexes
     @Test
     void when_getAllKendraIndexesIsCalled_then_getAllKendraIndexes() {
@@ -323,7 +337,33 @@ class GithubDataSourceKendraServiceImplTest {
         List<Pair<String,String>> allKendraIndexesExpected = new ArrayList<>();
         allKendraIndexesExpected.add(new ImmutablePair<>(indexId, indexName));
         assertEquals(allKendraIndexesExpected, allKendraIndexes);
-
     }
 
+    //Test for exception handling in getAllKendraIndexes()
+    @Test
+    void when_getAllKendraIndexesException_then_itIsHandledProperly() {
+        when(mockKendraClient.listIndices(any(ListIndicesRequest.class)))
+                .thenThrow(new RuntimeException("Simulated Exception"));
+        assertThrows(BasicKendraException.class, () ->{
+            injectedObject.getAllKendraIndexes();
+        });
+    }
+
+    //test case for createDataSourceConfiguration()
+    @Test
+    void when_createDataSourceConfigurationIsCalled_then_itReturnExpectedString() {
+        // Arrange
+        String secretArn = "secretArn";
+        String organizationName = "organizationName";
+        String hostUrl = "hostUrl";
+
+        ReflectionTestUtils.setField(injectedObject, "secretArn", secretArn);
+        ReflectionTestUtils.setField(injectedObject, "organizationName", organizationName);
+        ReflectionTestUtils.setField(injectedObject, "hostUrl", hostUrl);
+
+        String dataSourceConfiguration = injectedObject.createDataSourceConfiguration();
+        String dataSourceConfigurationExpected = String.format("DataSourceConfiguration(GitHubConfiguration=GitHubConfiguration(SaaSConfiguration=SaaSConfiguration(OrganizationName=%s, HostUrl=%s), SecretArn=%s))", organizationName, hostUrl, secretArn);
+        assertEquals(dataSourceConfigurationExpected, dataSourceConfiguration);
+
+    }
 }
