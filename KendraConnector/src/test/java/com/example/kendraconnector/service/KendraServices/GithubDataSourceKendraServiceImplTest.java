@@ -1,6 +1,8 @@
 package com.example.kendraconnector.service.KendraServices;
 
 import com.example.kendraconnector.dto.ResultItemDto;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,12 +15,19 @@ import software.amazon.awssdk.services.kendra.model.CreateDataSourceResponse;
 import software.amazon.awssdk.services.kendra.model.CreateIndexRequest;
 import software.amazon.awssdk.services.kendra.model.CreateIndexResponse;
 import software.amazon.awssdk.services.kendra.model.DataSourceStatus;
+import software.amazon.awssdk.services.kendra.model.DataSourceSummary;
+import software.amazon.awssdk.services.kendra.model.DataSourceType;
 import software.amazon.awssdk.services.kendra.model.DescribeDataSourceRequest;
 import software.amazon.awssdk.services.kendra.model.DescribeDataSourceResponse;
 import software.amazon.awssdk.services.kendra.model.DescribeIndexRequest;
 import software.amazon.awssdk.services.kendra.model.DescribeIndexResponse;
 import software.amazon.awssdk.services.kendra.model.GitHubConfiguration;
+import software.amazon.awssdk.services.kendra.model.IndexConfigurationSummary;
 import software.amazon.awssdk.services.kendra.model.IndexStatus;
+import software.amazon.awssdk.services.kendra.model.ListDataSourcesRequest;
+import software.amazon.awssdk.services.kendra.model.ListDataSourcesResponse;
+import software.amazon.awssdk.services.kendra.model.ListIndicesRequest;
+import software.amazon.awssdk.services.kendra.model.ListIndicesResponse;
 import software.amazon.awssdk.services.kendra.model.QueryRequest;
 import software.amazon.awssdk.services.kendra.model.QueryResponse;
 import software.amazon.awssdk.services.kendra.model.QueryResultItem;
@@ -210,5 +219,38 @@ class GithubDataSourceKendraServiceImplTest {
         assertEquals(queryResultItemsLocalExpected, queryResultItemsLocal);
     }
 
+    //Test cases for getting all data sources in an index
+    @Test
+    void when_indexIdIsProvided_then_getAllItsDataSources() {
+        String id = "id";
+        DataSourceType type = DataSourceType.S3;
+        String indexId = "indexId";
+        List<DataSourceSummary> dataSourceSummary = new ArrayList<>();
+        DataSourceSummary dataSourceSummary1 = DataSourceSummary.builder().id(id).type(type).build();
+        dataSourceSummary.add(dataSourceSummary1);
+        ListDataSourcesResponse listDataSourcesResponse = ListDataSourcesResponse.builder().summaryItems(dataSourceSummary).build();
+        when(mockKendraClient.listDataSources(any(ListDataSourcesRequest.class))).thenReturn(listDataSourcesResponse);
+        List<Pair<String,String>> allDataSources = injectedObject.getAllDataSources(indexId);
+        List<Pair<String,String>> allDataSourcesExpected = new ArrayList<>();
+        allDataSourcesExpected.add(new ImmutablePair<>(id, type.toString()));
+        assertEquals(allDataSourcesExpected, allDataSources);
+    }
+
+    //Test cases for getting all Kendra Indexes
+    @Test
+    void when_getAllKendraIndexesIsCalled_then_getAllKendraIndexes() {
+        String indexId = "indexId";
+        String indexName = "indexName";
+        List<IndexConfigurationSummary> indexConfigurationSummary = new ArrayList<>();
+        IndexConfigurationSummary indexConfigurationSummary1 = IndexConfigurationSummary.builder().id(indexId).name(indexName).build();
+        indexConfigurationSummary.add(indexConfigurationSummary1);
+        ListIndicesResponse listIndicesResponse = ListIndicesResponse.builder().indexConfigurationSummaryItems(indexConfigurationSummary).build();
+        when(mockKendraClient.listIndices(any(ListIndicesRequest.class))).thenReturn(listIndicesResponse);
+        List<Pair<String,String>> allKendraIndexes = injectedObject.getAllKendraIndexes();
+        List<Pair<String,String>> allKendraIndexesExpected = new ArrayList<>();
+        allKendraIndexesExpected.add(new ImmutablePair<>(indexId, indexName));
+        assertEquals(allKendraIndexesExpected, allKendraIndexes);
+
+    }
 
 }
