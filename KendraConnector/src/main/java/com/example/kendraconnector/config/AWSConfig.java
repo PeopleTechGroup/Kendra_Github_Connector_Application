@@ -11,16 +11,16 @@ import software.amazon.awssdk.services.kendra.KendraClient;
 @Configuration
 public class AWSConfig {
 
-    @Value("${aws.githubProfile3.credentials.accessKey}")
+    @Value("${aws.githubProfile.credentials.accessKey}")
     private String accessKey;
 
-    @Value("${aws.githubProfile3.credentials.secretKey}")
+    @Value("${aws.githubProfile.credentials.secretKey}")
     private String secretKey;
 
-    @Value("${aws.githubProfile3.credentials.region}")
+    @Value("${aws.githubProfile.credentials.region}")
     private String region;
 
-    @Value("${aws.githubProfile3.iamRole.arn}")
+    @Value("${aws.githubProfile.iamRole.arn}")
     private String indexRoleArn;
 
     @Bean
