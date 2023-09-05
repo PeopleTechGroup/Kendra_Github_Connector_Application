@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/KendraConnector/KendraConnector.iml" filepath="$PROJECT_DIR$/KendraConnector/KendraConnector.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Kendra_Github_Connector_Application.iml" filepath="$PROJECT_DIR$/.idea/Kendra_Github_Connector_Application.iml" />
+    </modules>
+  </component>
+</project>
