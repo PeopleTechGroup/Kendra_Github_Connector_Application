@@ -82,7 +82,8 @@ public class GithubDataSourceKendraServiceImpl implements GithubDataSourceKendra
             if (status == IndexStatus.CREATING || status == IndexStatus.UPDATING || status == IndexStatus.DELETING) {
                 do {
                     TimeUnit.SECONDS.sleep(60);
-                    status = describeIndexResponse.status();
+                    status = kendraClient.describeIndex(describeIndexRequest).status();
+//                    status = describeIndexResponse.status();
                 } while (status == IndexStatus.CREATING);
             }
 
@@ -160,7 +161,7 @@ public class GithubDataSourceKendraServiceImpl implements GithubDataSourceKendra
             if(status == DataSourceStatus.CREATING || status == DataSourceStatus.UPDATING || status == DataSourceStatus.DELETING) {
                 do {
                     TimeUnit.SECONDS.sleep(60);
-                    status = describeDataSourceResponse.status();
+                    status = kendraClient.describeDataSource(describeDataSourceRequest).status();
                 } while (status == DataSourceStatus.CREATING);
             }
 
@@ -171,15 +172,21 @@ public class GithubDataSourceKendraServiceImpl implements GithubDataSourceKendra
     }
 
     @Override
-    public List<Pair<String,String>> getAllDataSources(String indexId) {
-        List<Pair<String,String>> dataSourceTypes = new ArrayList<>();
-        ListDataSourcesRequest listDataSourcesRequest = ListDataSourcesRequest.builder().indexId(indexId).build();
-        ListDataSourcesResponse listDataSourcesResponse = kendraClient.listDataSources(listDataSourcesRequest);
-        List<DataSourceSummary> kendraDataSources = listDataSourcesResponse.summaryItems();
-        for (DataSourceSummary dataSource : kendraDataSources) {
-            dataSourceTypes.add(new ImmutablePair<>(dataSource.id(),dataSource.type().toString()));
+    public List<Pair<String, String>> getAllDataSources(String indexId) {
+        List<Pair<String, String>> dataSourceTypes = new ArrayList<>();
+
+        try {
+            ListDataSourcesRequest listDataSourcesRequest = ListDataSourcesRequest.builder().indexId(indexId).build();
+            ListDataSourcesResponse listDataSourcesResponse = kendraClient.listDataSources(listDataSourcesRequest);
+            List<DataSourceSummary> kendraDataSources = listDataSourcesResponse.summaryItems();
+
+            for (DataSourceSummary dataSource : kendraDataSources) {
+                dataSourceTypes.add(new ImmutablePair<>(dataSource.id(), dataSource.type().toString()));
+            }
+            return dataSourceTypes;
+        } catch (Exception e) {
+            throw new BasicKendraException("Exception thrown when checking for Kendra index status. "+ e.getMessage());
         }
-        return dataSourceTypes;
     }
 
     // @Override
@@ -208,21 +215,24 @@ public class GithubDataSourceKendraServiceImpl implements GithubDataSourceKendra
     public List<Pair<String,String>> getAllKendraIndexes() {
 
         List<Pair<String,String>> indexInfoPairs = new ArrayList<>();
-        // Create a ListIndicesRequest
-        ListIndicesRequest listIndicesRequest = ListIndicesRequest.builder().build();
+        try {
+            // Create a ListIndicesRequest
+            ListIndicesRequest listIndicesRequest = ListIndicesRequest.builder().build();
 
-        // Call the ListIndices API
-        ListIndicesResponse listIndicesResponse = kendraClient.listIndices(listIndicesRequest);
+            // Call the ListIndices API
+            ListIndicesResponse listIndicesResponse = kendraClient.listIndices(listIndicesRequest);
 
-        // Extract the index details from the response
-        List<IndexConfigurationSummary> indexes = listIndicesResponse.indexConfigurationSummaryItems();
-        for (IndexConfigurationSummary index : indexes) {
-            String indexId = index.id();
-            String indexName = index.name();
-            indexInfoPairs.add(new ImmutablePair<>(indexId,indexName));
+            // Extract the index details from the response
+            List<IndexConfigurationSummary> indexes = listIndicesResponse.indexConfigurationSummaryItems();
+            for (IndexConfigurationSummary index : indexes) {
+                String indexId = index.id();
+                String indexName = index.name();
+                indexInfoPairs.add(new ImmutablePair<>(indexId, indexName));
+            }
+            return indexInfoPairs;
+        } catch (Exception e) {
+            throw new BasicKendraException("Exception thrown when getting all Kendra Indexes. "+ e.getMessage());
         }
-
-        return indexInfoPairs;
     }
 
 }
