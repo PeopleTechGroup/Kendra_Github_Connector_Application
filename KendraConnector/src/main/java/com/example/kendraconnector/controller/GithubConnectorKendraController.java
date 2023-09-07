@@ -1,6 +1,10 @@
 package com.example.kendraconnector.controller;
 
 import com.example.kendraconnector.dto.ResultItemDto;
+import com.example.kendraconnector.exceptions.BasicKendraException;
+import com.example.kendraconnector.exceptions.DataSourceCreationException;
+import com.example.kendraconnector.exceptions.KendraIndexCreationException;
+import com.example.kendraconnector.exceptions.KendraQueryException;
 import com.example.kendraconnector.model.QueryResultItem;
 import com.example.kendraconnector.service.KendraServices.GithubDataSourceKendraService;
 import org.apache.commons.lang3.tuple.Pair;
@@ -27,7 +31,7 @@ public class GithubConnectorKendraController {
             ResultItemDto response = githubDataSourceKendraService.createKendraIndex(indexName, description);
             return ResponseEntity.ok(response);
         } catch(Exception e) {
-            throw new IndexCreationException("Failed to create Kendra Index");
+            throw new KendraIndexCreationException("Failed to create Kendra Index");
         }
     }
 
@@ -38,7 +42,7 @@ public class GithubConnectorKendraController {
             IndexStatus indexStatus = githubDataSourceKendraService.checkKendraIndexStatus(indexId);
             return ResponseEntity.ok(indexStatus);
         } catch (Exception e) {
-            throw new IndexStatusException("Failed to fetch index status");
+            throw new KendraIndexCreationException("Failed to fetch index status");
         }
     }
 
@@ -49,7 +53,7 @@ public class GithubConnectorKendraController {
             Boolean indexStatus = githubDataSourceKendraService.checkKendraIndexExists(indexId);
             return ResponseEntity.ok(indexStatus);
         } catch (Exception e) {
-            throw new IndexStatusException("Failed to check if index exists");
+            throw new BasicKendraException("Failed to check if index exists");
         }
     }
 
@@ -65,7 +69,7 @@ public class GithubConnectorKendraController {
         try {
             return githubDataSourceKendraService.createKendraGithubDataSource(indexId);
         } catch (Exception e) {
-            throw new DataSourceException("Failed to create DataSource");
+            throw new DataSourceCreationException("Failed to create DataSource");
         }
     }
 
@@ -96,7 +100,7 @@ public class GithubConnectorKendraController {
             List<QueryResultItem> queryResult = githubDataSourceKendraService.getQueryResult(query, indexId);
             return ResponseEntity.ok(queryResult);
         } catch (Exception e) {
-            throw new SearchQueryException("Failed to process search query");
+            throw new KendraQueryException("Failed to process search query");
         }
     }
 

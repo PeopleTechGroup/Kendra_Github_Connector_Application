@@ -1,5 +1,8 @@
 package com.example.kendraconnector.config;
 
+import com.example.kendraconnector.exceptions.BasicKendraException;
+import com.example.kendraconnector.exceptions.DataSourceCreationException;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,13 +23,21 @@ public class GithubConfig {
 
     @Bean
     public GitHubConfiguration getGitHubConfig() {
-        return GitHubConfiguration.builder()
-                .saaSConfiguration(SaaSConfiguration.builder()
-                        .hostUrl(hostUrl) //https://api.github.com
-                        .organizationName(organizationName)
-                        .build())
-                .secretArn(secretArn)
-                .build();
-    }
+        try {
+            if (secretArn == null || hostUrl == null || organizationName == null) {
+                throw new BasicKendraException("Required properties for GitHubConfiguration are missing");
+            }
 
+            return GitHubConfiguration.builder()
+                    .saaSConfiguration(SaaSConfiguration.builder()
+                            .hostUrl(hostUrl) //https://api.github.com
+                            .organizationName(organizationName)
+                            .build())
+                    .secretArn(secretArn)
+                    .build();
+
+        } catch (Exception e) {
+            throw new DataSourceCreationException("Failed to create GitHubConfiguration bean: " + e.getMessage());
+        }
+    }
 }

@@ -24,8 +24,6 @@ import java.util.concurrent.TimeUnit;
 public class GithubDataSourceKendraServiceImpl implements GithubDataSourceKendraService {
 
     @Autowired  private KendraClient kendraClient;
-    @Autowired private GitHubConfiguration gitHubConfig;
-
     @Value("${aws.iamRole.arn}")
     private String indexRoleArn;
 
