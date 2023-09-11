@@ -1,6 +1,10 @@
 package com.example.kendraconnector.controller;
 
 import com.example.kendraconnector.dto.ResultItemDto;
+import com.example.kendraconnector.exceptions.BasicKendraException;
+import com.example.kendraconnector.exceptions.DataSourceCreationException;
+import com.example.kendraconnector.exceptions.KendraIndexCreationException;
+import com.example.kendraconnector.exceptions.KendraQueryException;
 import com.example.kendraconnector.model.QueryResultItem;
 import com.example.kendraconnector.service.KendraServices.GithubDataSourceKendraService;
 import org.apache.commons.lang3.tuple.Pair;
@@ -20,27 +24,39 @@ public class GithubConnectorKendraController {
     @Autowired
     private GithubDataSourceKendraService githubDataSourceKendraService;
 
+    /* added try-catch here */
     @PostMapping("/create/index")
-    public ResponseEntity<ResultItemDto> createIndex(@RequestHeader("indexName") String indexName, @RequestHeader("description") String description) throws InterruptedException {
-        ResultItemDto response = githubDataSourceKendraService.createKendraIndex(indexName, description);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ResultItemDto> createIndex(@RequestHeader("indexName") String indexName, @RequestHeader("description") String description) {
+        try {
+            ResultItemDto response = githubDataSourceKendraService.createKendraIndex(indexName, description);
+            return ResponseEntity.ok(response);
+        } catch(Exception e) {
+            throw new KendraIndexCreationException("Failed to create Kendra Index");
+        }
     }
+
 
     @GetMapping("/index/status")
     public ResponseEntity<IndexStatus> checkIndexStatus(@RequestHeader("indexId") String indexId) {
-        /* indexId - Kendra Index created. */
-
-        IndexStatus indexStatus = githubDataSourceKendraService.checkKendraIndexStatus(indexId);
-        return ResponseEntity.ok(indexStatus);
+        try {
+            IndexStatus indexStatus = githubDataSourceKendraService.checkKendraIndexStatus(indexId);
+            return ResponseEntity.ok(indexStatus);
+        } catch (Exception e) {
+            throw new KendraIndexCreationException("Failed to fetch index status");
+        }
     }
+
 
     @GetMapping("/index/exists")
     public ResponseEntity<Boolean> checkIndexExists(@RequestHeader("indexId") String indexId) {
-        /* indexId - Kendra Index created. */
-
-        Boolean indexStatus = githubDataSourceKendraService.checkKendraIndexExists(indexId);
-        return ResponseEntity.ok(indexStatus);
+        try {
+            Boolean indexStatus = githubDataSourceKendraService.checkKendraIndexExists(indexId);
+            return ResponseEntity.ok(indexStatus);
+        } catch (Exception e) {
+            throw new BasicKendraException("Failed to check if index exists");
+        }
     }
+
 
     @GetMapping("/indexes")
     public ResponseEntity<List<Pair<String,String>>> getAllAvailableIndexes() {
@@ -50,10 +66,13 @@ public class GithubConnectorKendraController {
 
     @PostMapping("/createDatasource")
     public String createDataSourceId(@RequestHeader("indexId") String indexId) {
-        /* indexId - Kendra Index created. */
-
-        return githubDataSourceKendraService.createKendraGithubDataSource(indexId);
+        try {
+            return githubDataSourceKendraService.createKendraGithubDataSource(indexId);
+        } catch (Exception e) {
+            throw new DataSourceCreationException("Failed to create DataSource");
+        }
     }
+
 
     @GetMapping("/datasource/exists")
     public ResponseEntity<Boolean> checkKendraDataSourceExists(@RequestHeader("indexId") String indexId, @RequestHeader("dataSourceId") String dataSourceType) {
@@ -77,15 +96,14 @@ public class GithubConnectorKendraController {
 
     @GetMapping("/search")
     public ResponseEntity<List<QueryResultItem>> getSearchResultsFromQuery(@RequestHeader("query") String query, @RequestHeader("indexId") String indexId) {
-        /*
-
-           indexId - Kendra Index created.
-           query - Search query processed through Kendra index.
-
-        */
-        List<QueryResultItem> queryResult = githubDataSourceKendraService.getQueryResult(query, indexId);
-        return ResponseEntity.ok(queryResult);
+        try {
+            List<QueryResultItem> queryResult = githubDataSourceKendraService.getQueryResult(query, indexId);
+            return ResponseEntity.ok(queryResult);
+        } catch (Exception e) {
+            throw new KendraQueryException("Failed to process search query");
+        }
     }
+
 
     @GetMapping("/dataSourceConfiguration")
     public ResponseEntity<String> getSaasConfigurationDetails() {
@@ -93,3 +111,4 @@ public class GithubConnectorKendraController {
         return ResponseEntity.ok(organizationName);
     }
 }
+
